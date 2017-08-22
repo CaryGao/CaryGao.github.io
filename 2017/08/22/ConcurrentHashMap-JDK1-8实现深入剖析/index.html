@@ -14,19 +14,53 @@
 <meta name="author" content="Cary" />
 
 
-    
-    
 
+<meta name="description" content="ConcurrentHashMap JDK1.8源码深入剖析(一)阅读前建议掌握的知识
+CAS操作
+hashMap的原理
+并发相关锁的知识
+并发中原子性，可见性，重排序的概念
 
-<meta name="description" content="这辈子没法做太多的事情, 所以每一件都要做到精彩绝伦!">
-<meta property="og:type" content="website">
-<meta property="og:title" content="酒馆儒生">
-<meta property="og:url" content="https://carygao.github.io/index.html">
+特性
+底层实现原理为数组+链表+红黑树
+当链表大小阀值超过8时转换为红黑树
+大量使用CAS操作来实现无锁
+并发扩容
+
+主要属性TREEIFY_THRESHOLD,UNTREEIFY_THRESHOLD12static fi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ConcurrentHashMap JDK1.8源码深入剖析">
+<meta property="og:url" content="https://carygao.github.io/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/index.html">
 <meta property="og:site_name" content="酒馆儒生">
-<meta property="og:description" content="这辈子没法做太多的事情, 所以每一件都要做到精彩绝伦!">
+<meta property="og:description" content="ConcurrentHashMap JDK1.8源码深入剖析(一)阅读前建议掌握的知识
+CAS操作
+hashMap的原理
+并发相关锁的知识
+并发中原子性，可见性，重排序的概念
+
+特性
+底层实现原理为数组+链表+红黑树
+当链表大小阀值超过8时转换为红黑树
+大量使用CAS操作来实现无锁
+并发扩容
+
+主要属性TREEIFY_THRESHOLD,UNTREEIFY_THRESHOLD12static fi">
+<meta property="og:updated_time" content="2017-08-22T09:43:01.545Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="酒馆儒生">
-<meta name="twitter:description" content="这辈子没法做太多的事情, 所以每一件都要做到精彩绝伦!">
+<meta name="twitter:title" content="ConcurrentHashMap JDK1.8源码深入剖析">
+<meta name="twitter:description" content="ConcurrentHashMap JDK1.8源码深入剖析(一)阅读前建议掌握的知识
+CAS操作
+hashMap的原理
+并发相关锁的知识
+并发中原子性，可见性，重排序的概念
+
+特性
+底层实现原理为数组+链表+红黑树
+当链表大小阀值超过8时转换为红黑树
+大量使用CAS操作来实现无锁
+并发扩容
+
+主要属性TREEIFY_THRESHOLD,UNTREEIFY_THRESHOLD12static fi">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -54,13 +88,11 @@
 <link rel="stylesheet" href="/css/style.css">
 
 
-    <style> .article { opacity: 0;} </style>
-
 
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>酒馆儒生</title>
+<title>ConcurrentHashMap JDK1.8源码深入剖析 | 酒馆儒生</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -69,8 +101,8 @@
     var yiliaConfig = {
         fancybox: true,
         animate: true,
-        isHome: true,
-        isPost: false,
+        isHome: false,
+        isPost: true,
         isArchive: false,
         isTag: false,
         isCategory: false,
@@ -264,9 +296,7 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap">
-  
-    <article id="post-ConcurrentHashMap-JDK1-8实现深入剖析" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-ConcurrentHashMap-JDK1-8实现深入剖析" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
       <a href="/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/" class="article-date">
@@ -284,12 +314,19 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/">ConcurrentHashMap JDK1.8源码深入剖析</a>
+    <h1 class="article-title" itemprop="name">
+      ConcurrentHashMap JDK1.8源码深入剖析
     </h1>
   
 
       </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+        <div class="clearfix"></div>
+      </div>
       
     
     <div class="article-entry" itemprop="articleBody">
@@ -349,649 +386,119 @@
       
     </div>
     
-    <div class="article-info article-info-index">
-      
-      
-
-      
-      
-      <div class="clearfix"></div>
-    </div>
-    
   </div>
   
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-Redis实现分布式锁" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2017/08/08/Redis实现分布式锁/" class="article-date">
-      <time datetime="2017-08-08T09:30:42.000Z" itemprop="datePublished">2017-08-08</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
     
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/08/Redis实现分布式锁/">Redis实现分布式锁</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-        <h2 id="Redis实现分布式锁"><a href="#Redis实现分布式锁" class="headerlink" title="Redis实现分布式锁"></a>Redis实现分布式锁</h2><h4 id="分布式锁的一些问题"><a href="#分布式锁的一些问题" class="headerlink" title="分布式锁的一些问题"></a>分布式锁的一些问题</h4><ol>
-<li>并发问题，若多个客户端同时上锁，结果只允许一个客户端成功，其他失败，可以利用redis的<code>SETNX</code> 命令来实现，该命令允许若给定的 key 已经存在，则 <code>SETNX</code> 不做任何动作,设置成功，返回 1 ,设置失败，返回 0 。</li>
-<li>上锁后解锁的问题，可以考虑使用redis key的ttl过期，通过<code>PEXPIRE</code>来设置key的自动过期。若不使用自动过期特性，则需要在锁定结束后使用<code>DEL</code>命令来进行解锁，这种情况有可能发生某个客户端已经crash，于是这个锁会永远锁定，导致其他客户端无法获得锁。</li>
-</ol>
-<h4 id="Redis2-6以后新特性"><a href="#Redis2-6以后新特性" class="headerlink" title="Redis2.6以后新特性"></a>Redis2.6以后新特性</h4><p>redis2.6.12以后 SET 命令的行为可以通过一系列参数来修改</p>
-<ol>
-<li>EX second ：设置键的过期时间为 second 秒。 <code>SET key value EX second</code> 效果等同于 <code>SETEX key second value</code> 。</li>
-<li>PX millisecond ：设置键的过期时间为 millisecond 毫秒。 <code>SET key value PX millisecond</code> 效果等同于 <code>PSETEX key millisecond value</code> 。</li>
-<li>NX ：只在键不存在时，才对键进行设置操作。 <code>SET key value NX</code> 效果等同于 <code>SETNX key value</code> 。</li>
-<li>XX ：只在键已经存在时，才对键进行设置操作。</li>
-</ol>
-<h4 id="使用新特性来解决分布式锁"><a href="#使用新特性来解决分布式锁" class="headerlink" title="使用新特性来解决分布式锁"></a>使用新特性来解决分布式锁</h4><ol>
-<li>使用命令 <code>SET key value NX EX second</code> 设置锁的同时为锁设置TTL过期时间，若当锁已经存在时返回nil。</li>
-</ol>
-<h4 id="Redisson解决方法"><a href="#Redisson解决方法" class="headerlink" title="Redisson解决方法"></a>Redisson解决方法</h4><p><a href="https://github.com/redisson/redisson/wiki/Redisson%E9%A1%B9%E7%9B%AE%E4%BB%8B%E7%BB%8D" target="_blank" rel="external">Redisson</a>是redis的一个java客户端,实现了分布式锁和同步器，Redisson的分布式锁RLock Java对象实现了java.util.concurrent.locks.Lock接口，同时还支持自动过期解锁。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">RLock lock = redisson.getLock(&quot;anyLock&quot;);</span><br><span class="line">// 最常见的使用方法</span><br><span class="line">lock.lock();</span><br><span class="line"></span><br><span class="line">// 支持过期解锁功能</span><br><span class="line">// 10秒钟以后自动解锁</span><br><span class="line">// 无需调用unlock方法手动解锁</span><br><span class="line">lock.lock(10, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">// 尝试加锁，最多等待100秒，上锁以后10秒自动解锁</span><br><span class="line">boolean res = lock.tryLock(100, 10, TimeUnit.SECONDS);</span><br><span class="line">...</span><br><span class="line">lock.unlock();</span><br></pre></td></tr></table></figure></p>
-<p>以上是redisson使用锁的方法，它的原理采用了lua脚本的方式，这样能兼容redis 2.6.12之前的版本,锁的核心源码如下RedissonLock.java<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">&lt;T&gt; RFuture&lt;T&gt; tryLockInnerAsync(long leaseTime, TimeUnit unit, long threadId, RedisStrictCommand&lt;T&gt; command) &#123;</span><br><span class="line">        internalLockLeaseTime = unit.toMillis(leaseTime);</span><br><span class="line"></span><br><span class="line">        return commandExecutor.evalWriteAsync(getName(), LongCodec.INSTANCE, command,</span><br><span class="line">        //先检查key是否存在</span><br><span class="line">                  &quot;if (redis.call(&apos;exists&apos;, KEYS[1]) == 0) then &quot; +</span><br><span class="line">        //key不存在，创建Hash</span><br><span class="line">                      &quot;redis.call(&apos;hset&apos;, KEYS[1], ARGV[2], 1); &quot; +</span><br><span class="line">        //设置过期时间</span><br><span class="line">                      &quot;redis.call(&apos;pexpire&apos;, KEYS[1], ARGV[1]); &quot; +</span><br><span class="line">                      &quot;return nil; &quot; +</span><br><span class="line">                  &quot;end; &quot; +</span><br><span class="line">        //若锁已经存在，并且是同样获得锁的线程调用</span><br><span class="line">                  &quot;if (redis.call(&apos;hexists&apos;, KEYS[1], ARGV[2]) == 1) then &quot; +</span><br><span class="line">        //复用锁，为锁+1</span><br><span class="line">                      &quot;redis.call(&apos;hincrby&apos;, KEYS[1], ARGV[2], 1); &quot; +</span><br><span class="line">        //延长锁定时间</span><br><span class="line">                      &quot;redis.call(&apos;pexpire&apos;, KEYS[1], ARGV[1]); &quot; +</span><br><span class="line">                      &quot;return nil; &quot; +</span><br><span class="line">                  &quot;end; &quot; +</span><br><span class="line">         //若无法获得锁，返回锁的剩余时间</span><br><span class="line">                  &quot;return redis.call(&apos;pttl&apos;, KEYS[1]);&quot;,</span><br><span class="line">                    Collections.&lt;Object&gt;singletonList(getName()), internalLockLeaseTime, getLockName(threadId));</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-
-      
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-could-not-read-Username-for-https-github-com-Invalid-argument" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2017/08/04/could-not-read-Username-for-https-github-com-Invalid-argument/" class="article-date">
-      <time datetime="2017-08-04T04:23:47.000Z" itemprop="datePublished">2017-08-04</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/04/could-not-read-Username-for-https-github-com-Invalid-argument/">could not read Username for &#39;https://github.com&#39;: Invalid argument</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-        <h2 id="could-not-read-Username-for-‘https-github-com‘-Invalid-argument"><a href="#could-not-read-Username-for-‘https-github-com‘-Invalid-argument" class="headerlink" title="could not read Username for ‘https://github.com‘: Invalid argument"></a>could not read Username for ‘<a href="https://github.com" target="_blank" rel="external">https://github.com</a>‘: Invalid argument</h2><p>好久没玩hexo blog了，今天心血来潮想恢复使用，结果发现使用<code>hexo d</code>命令时会报如下错误</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">could not read Username for &apos;https://github.com&apos;: Invalid argument</span><br></pre></td></tr></table></figure>
-<p>网上搜索了下，这个问题有以下几个原因：</p>
-<ol>
-<li><p>如果安装git客户端的时候没有勾选git命令在bash和cmd命令都有效，若是在cmd命令下则因为没有将git添加到windows的path，所以会出现这个错误，一般可以尝试在blog的目录打开git bash再尝试<code>hexo d</code>。</p>
-</li>
-<li><p>未将username和email加入到git，可以使用如下命令试试</p>
-</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name &quot;yourname&quot;</span><br><span class="line">git config --global user.email &quot;youremail&quot;</span><br></pre></td></tr></table></figure>
-<ol>
-<li>检查<code>_config.yml</code>的配置是否正确</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line"> type: git</span><br><span class="line"> repo: https://github.com/yourname/yourname.github.io.git</span><br><span class="line"> branch: master</span><br></pre></td></tr></table></figure>
-<ol>
-<li>客户端太老，我遇到就是这个问题，即便切换了git bash也仍然报错，于是我升级了新客户端，结果能正常弹出github的用户名和密码输入框，确认后可以正常部署。</li>
-</ol>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-
-      
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-如何配置Oracle的SQLPlus" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/03/11/如何配置Oracle的SQLPlus/" class="article-date">
-      <time datetime="2016-03-11T08:00:25.000Z" itemprop="datePublished">2016-03-11</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/03/11/如何配置Oracle的SQLPlus/">如何配置Oracle的SQLPlus</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <h3 id="SQL-Plus-Overview"><a href="#SQL-Plus-Overview" class="headerlink" title="SQL*Plus Overview"></a>SQL*Plus Overview</h3><p>SQL*Plus是一个用于与Oracle Database交互和执行查询的工具，我们要安装的是命令行工具。<br>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/oracle/">oracle</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/sqlplus/">sqlplus</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2016/03/11/如何配置Oracle的SQLPlus/#more">阅读全文 >></a>
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/">ConcurrentHashMap JDK1.8源码深入剖析</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Cary</a></p>
+        <p><span>发布时间:</span>2017-08-22, 15:25:54</p>
+        <p><span>最后更新:</span>2017-08-22, 17:43:01</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/" title="ConcurrentHashMap JDK1.8源码深入剖析">https://carygao.github.io/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://carygao.github.io/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/　　作者: Cary" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-Oracle-ORA-01840-input-value-not-long-enough-for-date-format" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/03/08/Oracle-ORA-01840-input-value-not-long-enough-for-date-format/" class="article-date">
-      <time datetime="2016-03-08T07:20:33.000Z" itemprop="datePublished">2016-03-08</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/03/08/Oracle-ORA-01840-input-value-not-long-enough-for-date-format/">Oracle - ORA-01840: input value not long enough for date format</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <h2 id="错误日志："><a href="#错误日志：" class="headerlink" title="错误日志："></a>错误日志：</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Oracle - ORA-01840: input value not long enough for date format</span><br></pre></td></tr></table></figure>
-<p>在程式执行查询方法时，日志中出现以上错误</p>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/oracle/">oracle</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/">java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2016/03/08/Oracle-ORA-01840-input-value-not-long-enough-for-date-format/#more">阅读全文 >></a>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
         </p>
-      
-      <div class="clearfix"></div>
     </div>
-    
-  </div>
-  
-</article>
 
 
 
-
-
-
-
-
-
-  
-    <article id="post-Hexo安装教程-一" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/03/07/Hexo安装教程-一/" class="article-date">
-      <time datetime="2016-03-07T04:14:39.000Z" itemprop="datePublished">2016-03-07</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
+    <nav id="article-nav">
         
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/03/07/Hexo安装教程-一/">Hexo安装教程(一)</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <h2 id="什么是Hexo"><a href="#什么是Hexo" class="headerlink" title="什么是Hexo?"></a>什么是Hexo?</h2><p>Hexo 是一个快速、简洁且高效的博客框架。Hexo 使用 <a href="http://daringfireball.net/projects/markdown/">Markdown</a>（或其他渲染引擎）解析文章，在几秒内，即可利用靓丽的主题生成静态网页。</p>
-<h2 id="Hexo安装环境"><a href="#Hexo安装环境" class="headerlink" title="Hexo安装环境"></a>Hexo安装环境</h2><ul>
-<li>Windows7</li>
-</ul>
-<h2 id="Hexo安装步骤概览"><a href="#Hexo安装步骤概览" class="headerlink" title="Hexo安装步骤概览"></a>Hexo安装步骤概览</h2><ol>
-<li>安装node.js</li>
-<li>安装github desktop</li>
-<li>安装hexo
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/hexo/">hexo</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2016/03/07/Hexo安装教程-一/#more">阅读全文 >></a>
-        </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-随笔" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/03/04/随笔/" class="article-date">
-      <time datetime="2016-03-04T08:55:33.000Z" itemprop="datePublished">2016-03-04</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
         
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/03/04/随笔/">随笔</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-        <p><img src="/resources/164646181173681758.jpg" alt="澳门"><br><em>没有人是天才，个人的才能是靠自己挖掘的，登上山顶，望望身后已看不见的芸芸众生，回过头来，还需要继续向上。生活本不是闲情逸致，它本就是丑陋的，这个世界不会因为谁的离开就停止送给你恶意。我们唯一要学会的就是战斗，即使遇到困难，我们也要独自无谓的战斗下去。</em></p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/感悟/">感悟</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/随笔/">随笔</a></li></ul>
-    </div>
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-ORA-01882-timezone-region" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/03/03/ORA-01882-timezone-region/" class="article-date">
-      <time datetime="2016-03-03T08:47:02.000Z" itemprop="datePublished">2016-03-03</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2017/08/08/Redis实现分布式锁/">
+                    Redis实现分布式锁
+                </a>
+            </div>
         
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/03/03/ORA-01882-timezone-region/">ORA-01882: timezone region</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <h2 id="错误日志："><a href="#错误日志：" class="headerlink" title="错误日志："></a>错误日志：</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ORA-01882: timezone region</span><br></pre></td></tr></table></figure>
-<p>用weblogic配置连接池连到oracle时报错</p>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/java/">java</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/">java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/weblogic/">weblogic</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2016/03/03/ORA-01882-timezone-region/#more">阅读全文 >></a>
-        </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-原-如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2010/08/18/原-如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来/" class="article-date">
-      <time datetime="2010-08-18T08:21:00.000Z" itemprop="datePublished">2010-08-18</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2010/08/18/原-如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来/">如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来?</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <p>大家都知道如果给<code>UITableViewController</code>装载一些数据和控制cell的行为(高度,样式等)都需要指定<code>UITableView</code>的delegate给自身,一般会使用IB或者在<code>viewDidLoad</code>中写上<code>self.tableView.delegate = self;</code>然后实现<code>UITableViewDelegate</code>和<code>UITableViewDataSource</code>中的方法,例如:<code>-tableView:cellForRowAtIndexPath:</code> 等等.<br>那么如何将实现<code>UITableViewDelegate</code>和<code>UITableViewDataSource</code>的方法脱离出来单独放在一个新的class中呢?<br>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/objectiveC/">objectiveC</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ios/">ios</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iphone/">iphone</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/objective-c/">objective-c</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2010/08/18/原-如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来/#more">阅读全文 >></a>
-        </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-原-如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2010/05/26/原-如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部/" class="article-date">
-      <time datetime="2010-05-26T08:59:00.000Z" itemprop="datePublished">2010-05-26</time>
-</a>
-
-
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2010/05/26/原-如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部/">[原]如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <p>苹果自带的警告框非常好用，但是它总是显示在屏幕中间，我们如何将它的位置移动呢？从Iphone SDK3开始我们可以使用CGAffineTransformTranslate</p>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-
-      
-      
-        <p class="article-more-link">
-          <a href="/2010/05/26/原-如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部/#more">阅读全文 >></a>
-        </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-  
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
     </nav>
+
   
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#ConcurrentHashMap-JDK1-8源码深入剖析-一"><span class="toc-number">1.</span> <span class="toc-text">ConcurrentHashMap JDK1.8源码深入剖析(一)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#阅读前建议掌握的知识"><span class="toc-number">1.1.</span> <span class="toc-text">阅读前建议掌握的知识</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#特性"><span class="toc-number">1.2.</span> <span class="toc-text">特性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#主要属性"><span class="toc-number">1.3.</span> <span class="toc-text">主要属性</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#TREEIFY-THRESHOLD-UNTREEIFY-THRESHOLD"><span class="toc-number">1.3.0.1.</span> <span class="toc-text">TREEIFY_THRESHOLD,UNTREEIFY_THRESHOLD</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#sizeCtl"><span class="toc-number">1.3.0.2.</span> <span class="toc-text">sizeCtl</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#MOVED"><span class="toc-number">1.3.0.3.</span> <span class="toc-text">MOVED</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#TREEBIN"><span class="toc-number">1.3.0.4.</span> <span class="toc-text">TREEBIN</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#MAX-RESIZERS"><span class="toc-number">1.3.0.5.</span> <span class="toc-text">MAX_RESIZERS</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Node"><span class="toc-number">1.4.</span> <span class="toc-text">Node</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#关键的三个CAS方法"><span class="toc-number">1.5.</span> <span class="toc-text">关键的三个CAS方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Put方法"><span class="toc-number">1.6.</span> <span class="toc-text">Put方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考"><span class="toc-number">1.7.</span> <span class="toc-text">参考</span></a></li></ol></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"ConcurrentHashMap JDK1.8源码深入剖析　| 酒馆儒生　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2017/08/08/Redis实现分布式锁/" title="下一篇: Redis实现分布式锁">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2017/08/22/ConcurrentHashMap-JDK1-8实现深入剖析/">ConcurrentHashMap JDK1.8源码深入剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/08/Redis实现分布式锁/">Redis实现分布式锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/could-not-read-Username-for-https-github-com-Invalid-argument/">could not read Username for 'https://github.com': Invalid argument</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/11/如何配置Oracle的SQLPlus/">如何配置Oracle的SQLPlus</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/08/Oracle-ORA-01840-input-value-not-long-enough-for-date-format/">Oracle - ORA-01840: input value not long enough for date format</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/07/Hexo安装教程-一/">Hexo安装教程(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/04/随笔/">随笔</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/03/ORA-01882-timezone-region/">ORA-01882: timezone region</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/08/18/原-如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来/">如何将UITableViewDelegate和UITableViewDataSource从UITableViewController中分离出来?</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/05/26/原-如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部/">[原]如何移动组件的位置，例如如何将UIAlertView显示在屏幕上部</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/05/12/原-如何在navigationBar的中间添加一张自定义图片？/">[原]如何在navigationBar的中间添加一张自定义图片？</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/05/06/原-如何给组件添加事件并传递参数/">[原]如何给组件添加事件并传递参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/04/30/原-如何转换NSString与NSDate/">[原]如何转换NSString与NSDate?</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/04/28/原-怎样将UIImage对象保存到JPG或者PNG文件中？/">[原]怎样将UIImage对象保存到JPG或者PNG文件中？</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/04/27/原-Eclipse快捷键大搜集-不断更新/">[原]Eclipse快捷键大搜集(不断更新)</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/04/27/原-Xcode快捷键大搜集-不断更新/">[原]Xcode快捷键大搜集(不断更新)</a></li><li class="post-list-item"><a class="post-list-link" href="/2010/04/26/原-怎样获得documents文件夹以及为文件改名/">[原]怎样获得documents文件夹以及为文件改名</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/12/19/转-GPL协议的适用范围/">[转]GPL协议的适用范围</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/10/24/原-java-lang-IllegalArgumentException-id-to-load-is-required-for-loading/">[原]java.lang.IllegalArgumentException: id to load is required for loading</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/10/13/原-org-springframework-beans-factory-xml-XmlBeanDefinitionStoreException-Line-1-in-XML-document-from-class-path-resource/">[原]org.springframework.beans.factory.xml.XmlBeanDefinitionStoreException: Line 1 in XML document from class path resource</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/09/23/原-jcifs-smb-SmbException-NTLMv2-requires-extended-security/">[原]jcifs.smb.SmbException: NTLMv2 requires extended security</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/09/12/原-java-lang-IllegalArgumentException-node-to-traverse-cannot-be-null/">[原]java.lang.IllegalArgumentException: node to traverse cannot be null!</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/09/10/原-java-sql-SQLException-ORA-01799-a-column-may-not-be-outer-joined-to-a-subquery/">[原]java.sql.SQLException: ORA-01799: a column may not be outer-joined to a subquery</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/08/31/原-java-sql-BatchUpdateException-ORA-02291-integrity-constraint/">[原]java.sql.BatchUpdateException: ORA-02291: integrity constraint</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/08/21/原-org-hibernate-QueryException-query-specified-join-fetching-but-the-owner-of-the-fetched-association-was-not-present-in-the-sel/">[原]org.hibernate.QueryException: query specified join fetching, but the owner of the fetched association was not present in the sel</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/08/19/原-java-lang-NullPointerException/">[原]java.lang.NullPointerException</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/08/19/原-org-zkoss-zk-ui-UiException-java-lang-NoSuchMethodException/">[原]org.zkoss.zk.ui.UiException: java.lang.NoSuchMethodException:</a></li><li class="post-list-item"><a class="post-list-link" href="/2009/08/19/原-org-zkoss-zk-ui-UiException-Out-of-bound/">[原]org.zkoss.zk.ui.UiException: Out of bound:</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
 </div>
       <footer id="footer">
     <div class="outer">

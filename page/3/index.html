@@ -266,6 +266,76 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-原-jcifs-smb-SmbException-NTLMv2-requires-extended-security" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2009/09/23/原-jcifs-smb-SmbException-NTLMv2-requires-extended-security/" class="article-date">
+      <time datetime="2009-09-23T07:30:00.000Z" itemprop="datePublished">2009-09-23</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2009/09/23/原-jcifs-smb-SmbException-NTLMv2-requires-extended-security/">[原]jcifs.smb.SmbException: NTLMv2 requires extended security</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>錯誤日志:</p>
+<textarea cols="89" rows="9" name="code" class="java">jcifs.smb.SmbException: NTLMv2 requires extended security (jcifs.smb.client.useExtendedSecurity must be true if jcifs.smb.lmCompatibility &gt;= 3)<br>    jcifs.smb.NtlmPasswordAuthentication.getSigningKey(NtlmPasswordAuthentication.java:474)<br>    jcifs.smb.SmbSession.sessionSetup(SmbSession.java:295)<br>    jcifs.smb.SmbSession.send(SmbSession.java:234)<br>    jcifs.smb.SmbTree.treeConnect(SmbTree.java:161)<br>    jcifs.smb.SmbSession.logon(SmbSession.java:170)<br>    jcifs.smb.SmbSession.logon(SmbSession.java:163)<br></textarea> 
+
+<p>錯誤原因:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在使用NTLM与Spring Security时遇到上述问题,尚且不明白具体产生原因,初步估计是NTLM的Security与Spring Security有所冲突,参考资料发现做如下配置文件变动可解决问题.</p>
+<textarea cols="87" rows="10" name="code" class="java">        &lt;init-param&gt;<br>            &lt;param-name&gt;jcifs.smb.lmCompatibility&lt;/param-name&gt;<br>            &lt;param-value&gt;0&lt;/param-value&gt;<br>        &lt;/init-param&gt;<br>        &lt;init-param&gt;<br>            &lt;param-name&gt;<br>                jcifs.smb.client.useExtenededSecurity<br>            &lt;/param-name&gt;<br>            &lt;param-value&gt;false&lt;/param-value&gt;<br>        &lt;/init-param&gt;</textarea> 
+
+<p>&nbsp;</p>
+<p>参考<a href="http://lists.samba.org/archive/jcifs/2009-January/008356.html" target="_blank" rel="external">http://lists.samba.org/archive/jcifs/2009-January/008356.html</a></p>
+<pre><code>&lt;div&gt;
+    作者：wherejaly 发表于2009/9/23 15:30:00 [原文链接](http://blog.csdn.net/wherejaly/article/details/4584517)
+&lt;/div&gt;
+&lt;div&gt;
+阅读：3859 评论：1 [查看评论](http://blog.csdn.net/wherejaly/article/details/4584517#comments)
+&lt;/div&gt;
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-原-java-lang-IllegalArgumentException-node-to-traverse-cannot-be-null" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
